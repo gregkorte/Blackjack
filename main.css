@@ -1,0 +1,37 @@
+body {
+	background: url(img/bg.jpg);
+	background-size:100%;
+}
+li {
+	display:inline-block;
+}
+li + li {
+	margin-left: -110px;
+}
+.img_pCard {
+	margin-top: 0;
+	height:260px;
+	width:180px;
+  border-top-width:6px;
+  border-bottom-width:3px;
+  -webkit-transform: perspective(800px) rotateX(45deg);
+}
+.img_dCard {
+	margin-top: 0;
+	height:230px;
+	width:160px;
+  border-top-width:2px;
+  border-bottom-width:1px;
+  -webkit-transform: perspective(800px) rotateX(55deg);
+}
+.player {
+	text-align:center;
+	margin:25% auto 0;
+}
+.dealer {
+	text-align:center;
+	margin:-40% auto 0;
+}
+.gameTable {
+	position:relative;
+}
