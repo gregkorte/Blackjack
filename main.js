@@ -8,11 +8,22 @@ function Game(){
   this.playerTotal = 0;
   this.dealerTotal = 0;
 }
+
+function reset(){
+  game.deckID = '';
+  game.card = 0;
+  game.playerHand = [];
+  game.dealerHand = [];
+  game.playerTotal = 0;
+  game.dealerTotal = 0;
+}
 //When I click the New Game button I want to deal four cards
   //>>>>>create new instance of game<<<<<//
 	//>>>>>Initial JSON call to shuffle cards<<<<//
 	//>>>>>Second JSON call to deal cards<<<<//
 $('.new_game').on('click', function(){
+  reset();
+  console.log(game)
   Game();
   getJSON('http://deckofcardsapi.com/api/shuffle/?deck_count=6', function (newDeck) {
     game.deckID = newDeck.deck_id;
@@ -32,6 +43,7 @@ function dealCards(deckID){
         game.dealerHand.push(card);
       }
     }
+    console.log(game)
     showPlayerCards(game.playerHand);
     showDealerCards(game.dealerHand);
     pTotal(game.playerHand);
