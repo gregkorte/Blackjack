@@ -3,37 +3,48 @@ var game = new Game();
 function Game(){
   this.deckID = '';
   this.card = 0;
+  this.turn = 1;
   this.playerHand = [];
   this.dealerHand = [];
   this.playerTotal = 0;
   this.dealerTotal = 0;
 }
 
-function reset(){
+function gameReset(){
   game.deckID = '';
   game.card = 0;
+  game.turn = 1;
   game.playerHand = [];
   game.dealerHand = [];
   game.playerTotal = 0;
   game.dealerTotal = 0;
 }
-//When I click the New Game button I want to deal four cards
-  //>>>>>create new instance of game<<<<<//
-	//>>>>>Initial JSON call to shuffle cards<<<<//
-	//>>>>>Second JSON call to deal cards<<<<//
+
+function handReset(){
+  game.card = 0;
+  game.turn = 1;
+  game.playerHand = [];
+  game.dealerHand = [];
+  game.playerTotal = 0;
+  game.dealerTotal = 0;
+}
+
+function swipeCards() {
+  $('.dealer').empty();
+  $('.player').empty();
+}
+
 $('.new_game').on('click', function(){
-  reset();
-  console.log(game)
+  gameReset();
   Game();
   getJSON('http://deckofcardsapi.com/api/shuffle/?deck_count=6', function (newDeck) {
     game.deckID = newDeck.deck_id;
     dealCards(game.deckID);
 	})
 })
-//Two cards go to the Player
-//Two cards go to the Dealer
-	//The last Dealer card should be face down
+
 function dealCards(deckID){
+  handReset();
   getJSON('http://deckofcardsapi.com/api/draw/' + deckID + '/?count=4', function (newDeal){
     for (var i = 1; i < 5; i++){
       var card = newDeal.cards[i - 1];
@@ -43,15 +54,12 @@ function dealCards(deckID){
         game.dealerHand.push(card);
       }
     }
-    console.log(game)
     showPlayerCards(game.playerHand);
     showDealerCards(game.dealerHand);
     pTotal(game.playerHand);
-    dTotal(game.dealerHand);
   })
 }
 
-//Shows player cards
 function showPlayerCards(player){
   $('.player').empty();
   for(var i = 0; i < player.length; i++){
@@ -65,8 +73,27 @@ function showPlayerCards(player){
   };
 }
 
+function pTotal(playerHand){
+  game.playerTotal = 0;
+  for(var i = 0; i < playerHand.length; i++){
+    game.card = playerHand[i].value;
+    faceCheck(game.card);
+    game.playerTotal = Number(game.card) + game.playerTotal;
+    totalCheck(game.playerTotal);
+  }
+}
 
-//Shows dealer cards
+function totalCheck(total){
+  if (total > 21) {
+  alert('Bust! House wins...');
+  swipeCards();
+  dealCards(game.deckID);
+  }
+  else {
+    return;
+  }
+}
+
 function showDealerCards(dealer){
   $('.dealer').empty();
   for(var i = 0; i < dealer.length; i++){
@@ -80,43 +107,21 @@ function showDealerCards(dealer){
   };
 }
 
-//Totals player hand
-function pTotal(playerHand){
-  game.playerTotal = 0;
-  for(var i = 0; i < playerHand.length; i++){
-    game.card = playerHand[i].value;
-    faceCheck(game.card);
-    game.playerTotal = Number(game.card) + game.playerTotal;
-    totalCheck(game.playerTotal);
-  }
-}
-
-//Totals dealer hand
 function dTotal(dealerHand){
+  game.dealerTotal = 0;
   for(var i = 0; i < dealerHand.length; i++){
-    var card = dealerHand[i].value;
-    faceCheck(card);
-    game.dealerTotal = Number(card) + game.dealerTotal;
-    totalCheck(game.dealerTotal)
+    game.card = dealerHand[i].value;
+    faceCheck(game.card);
+    game.dealerTotal = Number(game.card) + game.dealerTotal;
   }
+  dealerCheck(game.dealerTotal);
 }
 
-//Checks total
-function totalCheck(total){
-  if (total > 21){
-      alert('Bust! House wins...');
-    } else {
-      console.log(game.playerTotal);
-    }
-}
-
-
-//Checks for face cards & applies number value
 function faceCheck(card){
-  if (game.dealerTotal){
-    var total = dealerTotal;
+  if (game.turn){
+    var total = game.playerTotal;
   } else {
-    total = playerTotal;
+    total = game.dealerTotal;
   }
   if (card === "KING" || card === "QUEEN" || card === "JACK"){
       game.card = "10";
@@ -129,17 +134,48 @@ function faceCheck(card){
     }
     return Number(game.card);
 }
-//IF>>>>
-	//Player presses the Stay button
-		//Score will be totaled
-		//Dealer will take turn
+
+function dealerDraw() {
+  getJSON('http://deckofcardsapi.com/api/draw/' + game.deckID + '/?count=1', function (draw) {
+    game.dealerHand.push(draw.cards[0]);
+    showDealerCards(game.dealerHand);
+    dTotal(game.dealerHand);
+  })
+}
+
+function dealerCheck(total){
+  if (total < 17){
+    dealerDraw();
+  } else if (total > 21) {
+    alert('House busts! You win...');
+    swipeCards();
+    dealCards(game.deckID);
+  } else if (total >= 17){
+    compareHands(game.playerTotal, game.dealerTotal);
+  }
+}
+
+function compareHands(player, dealer){
+  if (player > dealer){
+    alert('You win! House pays...');
+    swipeCards();
+    dealCards(game.deckID);
+  } else if (player === dealer) {
+    alert('Push');
+    swipeCards();
+    dealCards(game.deckID);
+  } else {
+    alert('House wins! You pay...');
+    swipeCards();
+    dealCards(game.deckID);
+  }
+}
+
 $('.stay').on('click', function(){
-  console.log('Stay clicked')
-  dealerCheck(game.dealerTotal);
+  game.turn = 0;
+  dTotal(game.dealerHand);
 })
-//ELSE IF>>>
-	//Player presses the Hit button
-		//Score will be totaled
+
 $('.hit').on('click', function(){
   getJSON('http://deckofcardsapi.com/api/draw/' + game.deckID + '/?count=1', function (hit) {
     game.playerHand.push(hit.cards[0]);
@@ -147,31 +183,6 @@ $('.hit').on('click', function(){
     pTotal(game.playerHand);
   })
 })
-			//IF>>>>
-				//Score is over 21
-					//Alert "Sorry you busted", House wins!
-			//ELSE IF>>>>
-				//Score is under 21
-					//Add card value to total
-						//Wait for next input
-//When Player turn is over:
-	//Check the value of the cards in the Dealer's hand
-function dealerCheck(total){
-  if (total < 16){
-    dealerDraw();
-  } else if (total >= 17){
-    compareScores();
-  }
-}
-    //IF>>>>
-			//Total is 17 or over
-				//Compute Dealer hand vs Player hand
-					//Declare winner.
-						//Redeal
-		//ELSE IF>>>>
-			//Total is under 17
-				//Add card to Dealer's hand
-					//Compute Dealer hand ::REPEAT AS NECCESSARY
 
 function getJSON(url, cb) {
   JSONP_PROXY = 'https://jsonp.afeld.me/?url='
