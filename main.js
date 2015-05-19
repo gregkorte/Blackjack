@@ -79,7 +79,8 @@ function pTotal(playerHand){
     game.card = playerHand[i].value;
     faceCheck(game.card);
     game.playerTotal = Number(game.card) + game.playerTotal;
-    totalCheck(game.playerTotal);
+    setTimeout(function () {totalCheck(game.playerTotal)}, 500);
+    // totalCheck(game.playerTotal);
   }
 }
 
@@ -114,7 +115,8 @@ function dTotal(dealerHand){
     faceCheck(game.card);
     game.dealerTotal = Number(game.card) + game.dealerTotal;
   }
-  dealerCheck(game.dealerTotal);
+  setTimeout(function () {dealerCheck(game.dealerTotal)}, 500);
+  // dealerCheck(game.dealerTotal);
 }
 
 function faceCheck(card){
