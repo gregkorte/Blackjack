@@ -1,5 +1,5 @@
 body {
-	background: url(img/bg.jpg);
+	background: url(img/bg.png);
 	background-size:100%;
 }
 li {
@@ -16,7 +16,7 @@ li + li {
   border-bottom-width:3px;
   -webkit-transform: perspective(800px) rotateX(45deg);
 }
-.img_dCard {
+.img_dCard, .img_dCardDown{
 	margin-top: 0;
 	height:230px;
 	width:160px;

@@ -8,6 +8,16 @@ function Game(){
   this.dealerHand = [];
   this.playerTotal = 0;
   this.dealerTotal = 0;
+  this.save = [
+    {
+      hands: 0,
+      handswon: 0,
+      handslost: 0,
+      handspushed: 0,
+      moneywon: 0,
+      moneylost: 0
+    }
+  ];
 }
 
 function gameReset(){
@@ -18,6 +28,14 @@ function gameReset(){
   game.dealerHand = [];
   game.playerTotal = 0;
   game.dealerTotal = 0;
+  game.save = {
+    hands: 0,
+    handswon: 0,
+    handslost: 0,
+    handspushed: 0,
+    moneywon: 0,
+    moneylost: 0
+  };
 }
 
 function handReset(){
@@ -43,6 +61,11 @@ $('.new_game').on('click', function(){
 	})
 })
 
+$('.quit_game').on('click', function(){
+  console.log(game.save);
+  swipeCards();
+})
+
 function dealCards(deckID){
   handReset();
   getJSON('http://deckofcardsapi.com/api/draw/' + deckID + '/?count=4', function (newDeal){
@@ -55,7 +78,7 @@ function dealCards(deckID){
       }
     }
     showPlayerCards(game.playerHand);
-    showDealerCards(game.dealerHand);
+    initDealerCards(game.dealerHand);
     pTotal(game.playerHand);
   })
 }
@@ -80,22 +103,45 @@ function pTotal(playerHand){
     faceCheck(game.card);
     game.playerTotal = Number(game.card) + game.playerTotal;
     setTimeout(function () {totalCheck(game.playerTotal)}, 500);
-    // totalCheck(game.playerTotal);
   }
 }
 
 function totalCheck(total){
-  if (total > 21) {
-  alert('Bust! House wins...');
-  swipeCards();
-  dealCards(game.deckID);
-  }
-  else {
-    return;
+  if (game.playerHand.length === 2 && total === 21){
+      alert('21!');
+      game.turn = 0;
+      var img = document.querySelector('.img_dCardDown');
+      img.src = game.dealerHand[1].image;
+      dTotal(game.dealerHand);
+  } else if (total > 21) {
+      alert('Bust! House wins...');
+      handsLost();
+  } else {
+      return;
   }
 }
 
+function initDealerCards(dealer){
+  console.log(dealer)
+  $('.dealer').empty();
+  for(var i = 0; i < dealer.length; i++){
+    var li = document.createElement('li');
+    var img = document.createElement('IMG');
+    var ul = document.querySelector('.dealer');
+    if (i === 0){
+      img.setAttribute("class", "img_dCard");
+      img.src = dealer[i].image;
+    } else {
+      img.setAttribute("class", "img_dCardDown");
+      img.src = 'img/deck.png';
+    }
+    ul.appendChild(li);
+    li.appendChild(img);
+  };
+}
+
 function showDealerCards(dealer){
+  console.log(dealer)
   $('.dealer').empty();
   for(var i = 0; i < dealer.length; i++){
     var li = document.createElement('li');
@@ -116,7 +162,6 @@ function dTotal(dealerHand){
     game.dealerTotal = Number(game.card) + game.dealerTotal;
   }
   setTimeout(function () {dealerCheck(game.dealerTotal)}, 500);
-  // dealerCheck(game.dealerTotal);
 }
 
 function faceCheck(card){
@@ -127,10 +172,13 @@ function faceCheck(card){
   }
   if (card === "KING" || card === "QUEEN" || card === "JACK"){
       game.card = "10";
+      console.log(game.card)
     } else if (card === "ACE" && total < 11){
       game.card = "11";
+      console.log(game.card)
     } else if (card === "ACE" && total >= 10){
       game.card = "1";
+      console.log(game.card)
     } else {
       card = game.card;
     }
@@ -149,9 +197,8 @@ function dealerCheck(total){
   if (total < 17){
     dealerDraw();
   } else if (total > 21) {
-    alert('House busts! You win...');
-    swipeCards();
-    dealCards(game.deckID);
+      alert('House busts! You win...');
+      handsWon();
   } else if (total >= 17){
     compareHands(game.playerTotal, game.dealerTotal);
   }
@@ -160,21 +207,37 @@ function dealerCheck(total){
 function compareHands(player, dealer){
   if (player > dealer){
     alert('You win! House pays...');
-    swipeCards();
-    dealCards(game.deckID);
+    handsWon();
   } else if (player === dealer) {
-    alert('Push');
-    swipeCards();
-    dealCards(game.deckID);
+      alert('Push');
+      game.save.handspushed += 1;
+      game.save.hands += 1;
+      swipeCards();
+      dealCards(game.deckID);
   } else {
-    alert('House wins! You pay...');
-    swipeCards();
-    dealCards(game.deckID);
+      alert('House wins! You pay...');
+      handsLost();
   }
+}
+
+function handsWon(){
+  game.save.handswon += 1;
+  game.save.hands += 1;
+  swipeCards();
+  dealCards(game.deckID);
+}
+
+function handsLost(){
+  game.save.handslost += 1;
+  game.save.hands += 1;
+  swipeCards();
+  dealCards(game.deckID);
 }
 
 $('.stay').on('click', function(){
   game.turn = 0;
+  var img = document.querySelector('.img_dCardDown');
+  img.src = game.dealerHand[1].image;
   dTotal(game.dealerHand);
 })
 
